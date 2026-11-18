@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=320, initial-scale=1.0">
+    <title>YourTube - Nokia C3</title>
+    <style>
+        body {
+            background-color: #121212;
+            color: #e0e0e0;
+            font-family: Arial, sans-serif;
+            font-size: 11px;
+            margin: 0;
+            padding: 4px;
+        }
+        h1 {
+            font-size: 13px;
+            color: #bb86fc;
+            margin: 0 0 6px 0;
+            text-align: center;
+        }
+        .search-box {
+            text-align: center;
+            margin-bottom: 6px;
+        }
+        input[type="text"] {
+            width: 68%;
+            padding: 3px;
+            background: #1e1e1e;
+            border: 1px solid #333;
+            color: #fff;
+            font-size: 11px;
+        }
+        button {
+            padding: 3px 5px;
+            background: #bb86fc;
+            border: none;
+            color: #121212;
+            font-weight: bold;
+            font-size: 11px;
+        }
+        .video-item {
+            border-bottom: 1px solid #222;
+            padding: 4px 0;
+            margin-bottom: 4px;
+        }
+        .video-title {
+            color: #8ab4f8;
+            text-decoration: none;
+            display: block;
+            font-weight: bold;
+        }
+        .meta {
+            color: #888;
+            font-size: 9px;
+        }
+        .stream-link {
+            color: #03dac6;
+            display: block;
+            margin: 4px 0;
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <h1>YourTube C3</h1>
+    <div class="search-box">
+        <input type="text" id="q" placeholder="Cari video...">
+        <button onclick="searchVideos()">Cari</button>
+    </div>
+    <div id="results"></div>
+
+    <script>
+        function searchVideos() {
+            var q = document.getElementById('q').value;
+            var resDiv = document.getElementById('results');
+            resDiv.innerHTML = 'Memuat...';
+            
+            fetch('/api/search?q=' + encodeURIComponent(q))
+                .then(function(res) { return res.json(); })
+                .then(function(data) {
+                    var html = '';
+                    if (data.error) {
+                        resDiv.innerHTML = 'Error: ' + data.error;
+                        return;
+                    }
+                    if (data.length === 0) {
+                        resDiv.innerHTML = 'Tidak ada hasil.';
+                        return;
+                    }
+                    for (var i = 0; i < data.length; i++) {
+                        var v = data[i];
+                        html += '<div class="video-item">';
+                        html += '<a class="video-title" href="#" onclick="loadVideo(\'' + v.videoId + '\'); return false;">' + v.title + '</a>';
+                        html += '<span class="meta">' + v.author + '</span>';
+                        html += '</div>';
+                    }
+                    resDiv.innerHTML = html;
+                })
+                .catch(function(err) {
+                    resDiv.innerHTML = 'Gagal memuat data.';
+                });
+        }
+
+        function loadVideo(id) {
+            var resDiv = document.getElementById('results');
+            resDiv.innerHTML = 'Mengambil tautan...';
+            
+            fetch('/api/video/' + id)
+                .then(function(res) { return res.json(); })
+                .then(function(data) {
+                    var html = '<b>' + data.title + '</b><br/>';
+                    html += '<span class="meta">Oleh: ' + data.author + '</span><br/><br/>';
+                    html += '<b>Pilih Resolusi / Putar:</b><br/>';
+                    
+                    if (data.formats && data.formats.length > 0) {
+                        for (var j = 0; j < data.formats.length; j++) {
+                            var f = data.formats[j];
+                            html += '<a class="stream-link" href="' + f.url + '" target="_blank">▶ Putar / Unduh (' + f.quality + ')</a>';
+                        }
+                    } else {
+                        html += '<p>Format video tidak tersedia.</p>';
+                    }
+                    html += '<br/><button onclick="searchVideos()">← Kembali</button>';
+                    resDiv.innerHTML = html;
+                })
+                .catch(function(err) {
+                    resDiv.innerHTML = 'Gagal memuat video.';
+                });
+        }
+    </script>
+</body>
+</html>
