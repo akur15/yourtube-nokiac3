@@ -43,7 +43,7 @@ app.get('/api/search', async (req, res) => {
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
-} );
+});
 
 // Endpoint Detail & Format Video
 app.get('/api/video/:id', async (req, res) => {
@@ -64,6 +64,12 @@ app.get('/api/video/:id', async (req, res) => {
   }
 });
 
-app.listen(PORT, () => {
-  console.log(`YourTube berjalan di port ${PORT}`);
-});
+// Untuk Vercel serverless
+module.exports = app;
+
+// Untuk dijalankan secara lokal
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`YourTube berjalan di port ${PORT}`);
+  });
+}
